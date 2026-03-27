@@ -1,0 +1,26 @@
+{
+  "name": "@serge-ai/mcp-server",
+  "version": "0.1.0",
+  "description": "Serge – AI agent benchmarking for websites via Claude Desktop",
+  "type": "module",
+  "bin": {
+    "serge": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.11.0",
+    "playwright": "^1.49.0",
+    "nanoid": "^5.0.0",
+    "open": "^10.0.0",
+    "chalk": "^5.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "@types/node": "^22.0.0",
+    "tsx": "^4.0.0"
+  }
+}

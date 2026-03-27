@@ -1,0 +1,75 @@
+{
+  "manifest_version": "0.2",
+  "name": "@serge/mcp-server",
+  "display_name": "Serge",
+  "version": "0.1.0",
+  "description": "Help Claude browse your website better. Instruments every navigation step — clicks, searches, form fills — with timing, screenshots, and detailed accessibility analysis so you can optimize your site for AI-assisted browsing.",
+  "author": {
+    "name": "Superstellar LLC",
+    "email": "hello@serge.ai",
+    "url": "https://www.serge.ai"
+  },
+  "homepage": "https://www.serge.ai",
+  "documentation": "https://www.serge.ai/docs/mcp-server",
+  "support": "https://www.serge.ai/contact",
+  "icon": "icon.png",
+  "server": {
+    "type": "node",
+    "entry_point": "dist/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": [
+        "${__dirname}/dist/index.js"
+      ],
+      "env": {}
+    }
+  },
+  "tools": [
+    {
+      "name": "serge_start_session",
+      "description": "Start a benchmarking session to measure how Claude navigates a website"
+    },
+    {
+      "name": "serge_navigate",
+      "description": "Navigate the browser to a URL and return the page structure."
+    },
+    {
+      "name": "serge_read_page",
+      "description": "Read the current page as a structured accessibility tree."
+    },
+    {
+      "name": "serge_click",
+      "description": "Click an element identified by its accessibility role and name."
+    },
+    {
+      "name": "serge_type",
+      "description": "Type text into a form field."
+    },
+    {
+      "name": "serge_scroll",
+      "description": "Scroll the page up or down."
+    },
+    {
+      "name": "serge_screenshot",
+      "description": "Take a screenshot of the current page"
+    },
+    {
+      "name": "serge_end_session",
+      "description": "End the session and generate a performance report."
+    }
+  ],
+  "keywords": [
+    "benchmarking",
+    "accessibility",
+    "web testing",
+    "browser automation",
+    "agent optimization",
+    "e-commerce",
+    "site performance"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "replace.me.please"
+  }
+}
