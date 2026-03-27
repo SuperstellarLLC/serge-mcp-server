@@ -9,7 +9,13 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsx src/index.ts",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check": "tsc --noEmit && eslint src/ && vitest run",
+    "prepare": "husky"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.11.0",
@@ -21,6 +27,26 @@
   "devDependencies": {
     "typescript": "^5.5.0",
     "@types/node": "^22.0.0",
-    "tsx": "^4.0.0"
+    "tsx": "^4.0.0",
+    "eslint": "^9.0.0",
+    "@eslint/js": "^9.0.0",
+    "typescript-eslint": "^8.0.0",
+    "vitest": "^3.0.0",
+    "husky": "^9.0.0",
+    "lint-staged": "^15.0.0",
+    "@commitlint/cli": "^19.0.0",
+    "@commitlint/config-conventional": "^19.0.0"
+  },
+  "files": [
+    "dist/",
+    "!dist/**/*.test.*",
+    "README.md",
+    "LICENSE"
+  ],
+  "lint-staged": {
+    "src/**/*.ts": [
+      "eslint --max-warnings=0",
+      "bash -c 'tsc --noEmit'"
+    ]
   }
 }

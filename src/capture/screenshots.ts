@@ -1,7 +1,7 @@
-import { Page } from 'playwright';
+import type { Page } from 'playwright';
 import { writeFile } from 'fs/promises';
 import path from 'path';
-import { SessionState } from '../types.js';
+import type { SessionState } from '../types.js';
 
 const log = (msg: string) => process.stderr.write(`[serge] ${msg}\n`);
 
@@ -15,8 +15,8 @@ export async function captureScreenshot(page: Page, state: SessionState): Promis
     await writeFile(filepath, buffer);
     log(`Screenshot saved: ${filename}`);
     return filepath;
-  } catch (err: any) {
-    log(`Screenshot failed: ${err.message}`);
+  } catch (err: unknown) {
+    log(`Screenshot failed: ${err instanceof Error ? err.message : String(err)}`);
     return '';
   }
 }

@@ -1,13 +1,12 @@
-import { chromium, Browser, Page } from 'playwright';
+import type { Browser, Page } from 'playwright';
+import { chromium } from 'playwright';
 import { execFileSync } from 'child_process';
-import path from 'path';
 import fs from 'fs';
 
 const log = (msg: string) => process.stderr.write(`[serge] ${msg}\n`);
 
 let browser: Browser | null = null;
 let page: Page | null = null;
-let networkListener: ((session: any) => void) | null = null;
 
 function isChromiumInstalled(): boolean {
   try {
@@ -40,7 +39,7 @@ export async function getBrowser(): Promise<Browser> {
 
   // Try headed first, fall back to headless if no display
   let headed = true;
-  if (!process.env.DISPLAY && process.platform === 'linux') {
+  if (!process.env['DISPLAY'] && process.platform === 'linux') {
     headed = false;
   }
 

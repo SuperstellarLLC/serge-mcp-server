@@ -2,7 +2,7 @@ export interface ActionEvent {
   index: number;
   timestamp: string;
   action: 'navigate' | 'click' | 'type' | 'scroll' | 'read_page' | 'screenshot';
-  params: Record<string, any>;
+  params: Record<string, unknown>;
   result: {
     success: boolean;
     duration_ms: number;

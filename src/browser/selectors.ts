@@ -1,4 +1,4 @@
-import { Page, Locator } from 'playwright';
+import type { Page, Locator } from 'playwright';
 
 const log = (msg: string) => process.stderr.write(`[serge] ${msg}\n`);
 
@@ -11,7 +11,7 @@ export async function resolveLocator(page: Page, role?: string, name?: string): 
 
   // If role is provided, use it directly
   if (role) {
-    const locator = page.getByRole(role as any, { name, exact: false });
+    const locator = page.getByRole(role as Parameters<Page['getByRole']>[0], { name, exact: false });
     const count = await locator.count();
     if (count > 0) {
       log(`Found ${count} element(s) with role="${role}" name="${name}"`);
@@ -30,8 +30,8 @@ export async function resolveLocator(page: Page, role?: string, name?: string): 
     }
   }
 
-  // Try aria-label
-  const ariaLocator = page.locator(`[aria-label="${name}"]`);
+  // Try aria-label (using getByLabel to avoid selector injection)
+  const ariaLocator = page.getByLabel(name, { exact: false });
   if (await ariaLocator.count() > 0) {
     log(`Found element with aria-label="${name}"`);
     return ariaLocator.first();

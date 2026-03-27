@@ -6,9 +6,16 @@
     "outDir": "dist",
     "rootDir": "src",
     "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+    "exactOptionalPropertyTypes": false,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
     "esModuleInterop": true,
     "declaration": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "skipLibCheck": true
   },
   "include": ["src/**/*"]
 }

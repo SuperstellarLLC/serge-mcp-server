@@ -1,0 +1,19 @@
+# Source (only dist/ ships)
+src/
+
+# Test artifacts in dist
+dist/**/*.test.*
+
+# Dev configs
+.husky/
+.github/
+.gitleaks.toml
+eslint.config.js
+commitlint.config.js
+vitest.config.ts
+tsconfig.json
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store

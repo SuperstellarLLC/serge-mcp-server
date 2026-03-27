@@ -2,7 +2,7 @@ import { mkdir, writeFile, readdir, readFile } from 'fs/promises';
 import path from 'path';
 import os from 'os';
 import { nanoid } from 'nanoid';
-import { Session, SessionState } from '../types.js';
+import type { Session, SessionState } from '../types.js';
 
 const log = (msg: string) => process.stderr.write(`[serge] ${msg}\n`);
 
@@ -17,7 +17,7 @@ export function getReportsDir() { return REPORTS_DIR; }
 export async function startSession(domain: string, task: string): Promise<SessionState> {
   const date = new Date().toISOString().split('T')[0];
   const domainSlug = domain.replace(/[^a-z0-9]/gi, '-').toLowerCase();
-  const sessionId = `${date}-${domainSlug}-${nanoid(6)}`;
+  const sessionId = `${date}-${domainSlug}-${nanoid(12)}`;
 
   const sessionDir = path.join(SESSIONS_DIR, sessionId);
   const screenshotsDir = path.join(sessionDir, 'screenshots');

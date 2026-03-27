@@ -1,6 +1,6 @@
-import { writeFile, readFile } from 'fs/promises';
+import { writeFile } from 'fs/promises';
 import path from 'path';
-import { Session } from '../types.js';
+import type { Session } from '../types.js';
 import { getReportsDir } from '../capture/session.js';
 import { buildHtml } from './template.js';
 
@@ -21,8 +21,9 @@ export async function getLatestReportPath(): Promise<string | null> {
   try {
     const files = await readdir(reportsDir);
     const htmlFiles = files.filter(f => f.endsWith('.html')).sort().reverse();
-    if (htmlFiles.length === 0) return null;
-    return path.join(reportsDir, htmlFiles[0]);
+    const latest = htmlFiles[0];
+    if (!latest) return null;
+    return path.join(reportsDir, latest);
   } catch {
     return null;
   }

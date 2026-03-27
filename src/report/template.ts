@@ -1,5 +1,17 @@
-import { Session, ActionEvent } from '../types.js';
+import type { Session } from '../types.js';
 import { readFile } from 'fs/promises';
+
+const HTML_ESCAPE_MAP: Record<string, string> = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&#39;',
+};
+
+function esc(text: string): string {
+  return text.replace(/[&<>"']/g, c => HTML_ESCAPE_MAP[c] ?? c);
+}
 
 async function screenshotToBase64(filepath: string): Promise<string> {
   try {
@@ -84,7 +96,7 @@ function generateFindings(session: Session): string[] {
 
 export async function buildHtml(session: Session): Promise<string> {
   // Build screenshot data map
-  const screenshotData: Map<number, string> = new Map();
+  const screenshotData = new Map<number, string>();
   for (const action of session.actions) {
     if (action.screenshot_path) {
       const b64 = await screenshotToBase64(action.screenshot_path);
@@ -109,7 +121,7 @@ export async function buildHtml(session: Session): Promise<string> {
     const statusClass = action.result.success ? 'step-success' : 'step-failure';
     const statusIcon = action.result.success ? '&#x2705;' : '&#x274C;';
     const paramsStr = Object.entries(action.params)
-      .map(([k, v]) => `<span class="param-key">${k}:</span> ${String(v)}`)
+      .map(([k, v]) => `<span class="param-key">${esc(k)}:</span> ${esc(String(v))}`)
       .join(', ');
 
     return `
@@ -123,9 +135,9 @@ export async function buildHtml(session: Session): Promise<string> {
         </div>
         <div class="step-details">
           <div class="step-params">${paramsStr}</div>
-          ${action.result.error ? `<div class="step-error">${action.result.error}</div>` : ''}
-          ${action.result.url_after ? `<div class="step-url">Navigated to: ${action.result.url_after}</div>` : ''}
-          <div class="step-page-url">${action.page_url}</div>
+          ${action.result.error ? `<div class="step-error">${esc(action.result.error)}</div>` : ''}
+          ${action.result.url_after ? `<div class="step-url">Navigated to: ${esc(action.result.url_after)}</div>` : ''}
+          <div class="step-page-url">${esc(action.page_url)}</div>
         </div>
         ${screenshotHtml}
       </div>`;
@@ -136,7 +148,7 @@ export async function buildHtml(session: Session): Promise<string> {
   const networkRows = slowestResources.map(n => `
     <tr>
       <td>${n.method}</td>
-      <td class="url-cell" title="${n.url}">${n.url.length > 80 ? n.url.substring(0, 80) + '...' : n.url}</td>
+      <td class="url-cell" title="${esc(n.url)}">${esc(n.url.length > 80 ? n.url.substring(0, 80) + '...' : n.url)}</td>
       <td>${n.status}</td>
       <td>${formatDuration(n.response_time_ms)}</td>
       <td>${(n.size_bytes / 1024).toFixed(1)} KB</td>
@@ -148,7 +160,7 @@ export async function buildHtml(session: Session): Promise<string> {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Serge Report — ${session.domain} — ${session.task}</title>
+<title>Serge Report — ${esc(session.domain)} — ${esc(session.task)}</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f7; color: #333; }
@@ -369,9 +381,9 @@ export async function buildHtml(session: Session): Promise<string> {
 
 <div class="header">
   <h1><span>Serge</span> Report</h1>
-  <div class="task">${session.task}</div>
+  <div class="task">${esc(session.task)}</div>
   <div class="meta">
-    <span>${session.domain}</span>
+    <span>${esc(session.domain)}</span>
     <span>${new Date(session.started_at).toLocaleString()}</span>
     <span>${outcomeBadge(session.outcome)}</span>
   </div>
@@ -400,7 +412,7 @@ export async function buildHtml(session: Session): Promise<string> {
           <div class="stat-label">Network Requests</div>
         </div>
       </div>
-      ${session.notes ? `<p style="margin-top: 16px; color: #666; font-size: 14px;">${session.notes}</p>` : ''}
+      ${session.notes ? `<p style="margin-top: 16px; color: #666; font-size: 14px;">${esc(session.notes)}</p>` : ''}
     </div>
   </div>
 

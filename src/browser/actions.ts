@@ -1,4 +1,4 @@
-import { Page } from 'playwright';
+import type { Page } from 'playwright';
 import { resolveLocator } from './selectors.js';
 
 const log = (msg: string) => process.stderr.write(`[serge] ${msg}\n`);
@@ -12,8 +12,8 @@ export async function navigate(page: Page, url: string): Promise<NavigateResult>
   log(`Navigating to ${url}`);
   try {
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 15000 });
-  } catch (err: any) {
-    if (err.name === 'TimeoutError') {
+  } catch (err: unknown) {
+    if (err instanceof Error && err.name === 'TimeoutError') {
       log(`Navigation timeout for ${url}, continuing with partial load`);
     } else {
       throw err;
@@ -64,10 +64,10 @@ export async function click(page: Page, role?: string, name?: string): Promise<C
       ariaLabel: ariaLabel ?? undefined,
       newUrl: page.url() !== urlBefore ? page.url() : undefined,
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
     return {
       found: false,
-      error: err.message,
+      error: err instanceof Error ? err.message : String(err),
     };
   }
 }
@@ -99,10 +99,10 @@ export async function type(page: Page, role: string | undefined, name: string, t
       found: true,
       fieldType,
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
     return {
       found: false,
-      error: err.message,
+      error: err instanceof Error ? err.message : String(err),
     };
   }
 }

@@ -1,14 +1,36 @@
 import { getPage, closeBrowser } from '../browser/manager.js';
 import * as actions from '../browser/actions.js';
 import { startSession, endSession } from '../capture/session.js';
-import { SessionState } from '../types.js';
+import type { SessionState } from '../types.js';
 import { captureAction } from '../capture/events.js';
-import { attachNetworkListeners } from '../capture/network.js';
+import { attachNetworkListeners, resetNetworkState } from '../capture/network.js';
 import { generateReport } from '../report/generator.js';
 
-const log = (msg: string) => process.stderr.write(`[serge] ${msg}\n`);
+const SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 
 let activeSession: SessionState | null = null;
+let sessionTimer: ReturnType<typeof setTimeout> | null = null;
+
+function clearSessionTimer(): void {
+  if (sessionTimer) {
+    clearTimeout(sessionTimer);
+    sessionTimer = null;
+  }
+}
+
+async function forceEndSession(): Promise<void> {
+  if (!activeSession) return;
+  process.stderr.write('[serge] Session timed out after 30 minutes. Forcing cleanup.\n');
+  try {
+    await endSession(activeSession, 'failure', 'Session timed out after 30 minutes');
+    await generateReport(activeSession.session);
+  } catch {
+    // Best effort
+  }
+  await closeBrowser();
+  resetNetworkState();
+  activeSession = null;
+}
 
 function requireSession(): SessionState {
   if (!activeSession) {
@@ -29,6 +51,10 @@ export async function handleStartSession(args: { domain: string; task: string })
   // Launch browser and attach network listeners
   const page = await getPage();
   attachNetworkListeners(page, activeSession.session.network);
+
+  // Start session timeout
+  clearSessionTimer();
+  sessionTimer = setTimeout(() => { void forceEndSession(); }, SESSION_TIMEOUT_MS);
 
   return {
     content: [{
@@ -70,7 +96,7 @@ export async function handleReadPage() {
   const session = requireSession();
   const page = await getPage();
 
-  const event = await captureAction(page, session, 'read_page', {}, async () => {
+  await captureAction(page, session, 'read_page', {}, async () => {
     return {};
   });
 
@@ -170,7 +196,7 @@ export async function handleScroll(args: { direction: string }) {
   const session = requireSession();
   const page = await getPage();
 
-  const event = await captureAction(page, session, 'scroll', args, async () => {
+  await captureAction(page, session, 'scroll', args, async () => {
     const result = await actions.scroll(page, args.direction as 'up' | 'down');
     return { scrolledTo: result.scrolledTo };
   });
@@ -220,6 +246,8 @@ export async function handleEndSession(args: { outcome: string; notes: string })
   await generateReport(summary);
 
   // Cleanup
+  clearSessionTimer();
+  resetNetworkState();
   await closeBrowser();
   activeSession = null;
 

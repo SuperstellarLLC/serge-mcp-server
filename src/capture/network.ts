@@ -1,24 +1,40 @@
-import { Page, Request, Response } from 'playwright';
-import { NetworkEvent } from '../types.js';
+import type { Page, Request, Response } from 'playwright';
+import type { NetworkEvent } from '../types.js';
 
 const log = (msg: string) => process.stderr.write(`[serge] ${msg}\n`);
 
-const pendingRequests = new Map<string, { timestamp: string; startTime: number }>();
+const MAX_PENDING_REQUESTS = 1000;
+const MAX_NETWORK_EVENTS = 5000;
+
+const pendingRequests = new Map<Request, { timestamp: string; startTime: number }>();
+
+export function resetNetworkState(): void {
+  pendingRequests.clear();
+}
 
 export function attachNetworkListeners(page: Page, networkEvents: NetworkEvent[]): void {
   page.on('request', (request: Request) => {
-    pendingRequests.set(request.url() + request.method(), {
+    // Evict oldest entry if map is full to prevent unbounded growth
+    if (pendingRequests.size >= MAX_PENDING_REQUESTS) {
+      const oldest = pendingRequests.keys().next().value;
+      if (oldest) pendingRequests.delete(oldest);
+    }
+
+    pendingRequests.set(request, {
       timestamp: new Date().toISOString(),
       startTime: performance.now(),
     });
   });
 
   page.on('response', async (response: Response) => {
-    const key = response.url() + response.request().method();
-    const pending = pendingRequests.get(key);
+    const request = response.request();
+    const pending = pendingRequests.get(request);
     if (!pending) return;
 
-    pendingRequests.delete(key);
+    pendingRequests.delete(request);
+
+    // Cap stored events to prevent unbounded memory growth
+    if (networkEvents.length >= MAX_NETWORK_EVENTS) return;
 
     let sizeBytes = 0;
     try {
@@ -39,6 +55,10 @@ export function attachNetworkListeners(page: Page, networkEvents: NetworkEvent[]
     };
 
     networkEvents.push(event);
+  });
+
+  page.on('requestfailed', (request: Request) => {
+    pendingRequests.delete(request);
   });
 
   log('Network listeners attached');

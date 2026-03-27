@@ -1,0 +1,33 @@
+# Secret scanning — block commits containing secrets/credentials
+if command -v gitleaks >/dev/null 2>&1; then
+  gitleaks protect --staged --config .gitleaks.toml --verbose
+elif npx --no-install gitleaks 2>/dev/null; then
+  npx gitleaks protect --staged --config .gitleaks.toml --verbose
+else
+  echo "[serge] WARNING: gitleaks not installed. Scanning with grep fallback..."
+  # Fallback: grep staged files for common secret patterns
+  SECRETS_FOUND=0
+  for pattern in \
+    'sk-ant-[a-zA-Z0-9_-]\{20,\}' \
+    'sk-[a-zA-Z0-9]\{20,\}' \
+    'AKIA[0-9A-Z]\{16\}' \
+    '-----BEGIN.*PRIVATE KEY-----' \
+    'ghp_[a-zA-Z0-9]\{36\}' \
+    'gho_[a-zA-Z0-9]\{36\}' \
+    'xoxb-[0-9]\{10,\}' \
+    'xoxp-[0-9]\{10,\}'; do
+    if git diff --cached --diff-filter=ACMR -U0 | grep -qE "$pattern"; then
+      echo "ERROR: Potential secret detected matching pattern: $pattern"
+      SECRETS_FOUND=1
+    fi
+  done
+  if [ "$SECRETS_FOUND" -eq 1 ]; then
+    echo ""
+    echo "Commit blocked. Remove secrets before committing."
+    echo "Install gitleaks for better scanning: brew install gitleaks"
+    exit 1
+  fi
+fi
+
+npx tsc --noEmit
+npx lint-staged

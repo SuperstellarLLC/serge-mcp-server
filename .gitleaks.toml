@@ -1,0 +1,48 @@
+# Gitleaks configuration for @serge-ai/mcp-server
+# https://github.com/gitleaks/gitleaks
+
+title = "serge-mcp secret scanning"
+
+# Use the built-in rules (AWS keys, GCP keys, GitHub tokens, Slack tokens,
+# private keys, JWTs, generic API keys, passwords in URLs, etc.)
+# Then add custom rules specific to this project.
+
+[[rules]]
+id = "anthropic-api-key"
+description = "Anthropic API Key"
+regex = '''sk-ant-[a-zA-Z0-9_-]{20,}'''
+tags = ["key", "anthropic"]
+
+[[rules]]
+id = "openai-api-key"
+description = "OpenAI API Key"
+regex = '''sk-[a-zA-Z0-9]{20,}'''
+tags = ["key", "openai"]
+
+[[rules]]
+id = "generic-secret-assignment"
+description = "Hardcoded secret in assignment"
+regex = '''(?i)(secret|password|passwd|token|api_key|apikey|api-key|auth_token|access_token|private_key)\s*[:=]\s*['\"][^\s'"]{8,}['\"]'''
+tags = ["secret", "generic"]
+
+[[rules]]
+id = "private-key-block"
+description = "Private key file content"
+regex = '''-----BEGIN\s+(RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----'''
+tags = ["key", "private"]
+
+[[rules]]
+id = "connection-string"
+description = "Database connection string with credentials"
+regex = '''(?i)(mongodb|postgres|mysql|redis|amqp|mssql):\/\/[^:]+:[^@]+@'''
+tags = ["secret", "database"]
+
+# Allowlist: paths and patterns that are OK to match
+[allowlist]
+description = "Global allowlist"
+paths = [
+  '''\.gitleaks\.toml$''',
+  '''package-lock\.json$''',
+  '''\.test\.ts$''',
+  '''commitlint\.config\.js$''',
+]

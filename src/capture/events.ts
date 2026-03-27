@@ -1,5 +1,5 @@
-import { Page } from 'playwright';
-import { ActionEvent, SessionState } from '../types.js';
+import type { Page } from 'playwright';
+import type { ActionEvent, SessionState } from '../types.js';
 import { captureScreenshot } from './screenshots.js';
 
 const log = (msg: string) => process.stderr.write(`[serge] ${msg}\n`);
@@ -8,8 +8,8 @@ export async function captureAction(
   page: Page,
   state: SessionState,
   actionName: ActionEvent['action'],
-  params: Record<string, any>,
-  executeFn: () => Promise<Record<string, any>>
+  params: Record<string, unknown>,
+  executeFn: () => Promise<Record<string, unknown>>
 ): Promise<ActionEvent> {
   const startTime = performance.now();
 
@@ -37,7 +37,7 @@ export async function captureAction(
     state.session.actions.push(event);
     log(`Action captured: ${actionName} (${duration}ms)`);
     return event;
-  } catch (err: any) {
+  } catch (err: unknown) {
     const duration = Math.round(performance.now() - startTime);
 
     const screenshotPath = await captureScreenshot(page, state).catch(() => '');
@@ -50,7 +50,7 @@ export async function captureAction(
       result: {
         success: false,
         duration_ms: duration,
-        error: err.message,
+        error: err instanceof Error ? err.message : String(err),
       },
       screenshot_path: screenshotPath,
       page_url: page.url(),
@@ -58,7 +58,7 @@ export async function captureAction(
     };
 
     state.session.actions.push(event);
-    log(`Action failed: ${actionName} - ${err.message}`);
+    log(`Action failed: ${actionName} - ${err instanceof Error ? err.message : String(err)}`);
     return event;
   }
 }
