@@ -45,4 +45,5 @@ paths = [
   '''package-lock\.json$''',
   '''\.test\.ts$''',
   '''commitlint\.config\.js$''',
+  '''node_modules/''',
 ]
