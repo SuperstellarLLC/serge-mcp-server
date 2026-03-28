@@ -52,13 +52,17 @@ export async function endSession(
   outcome: 'success' | 'failure' | 'partial',
   notes: string
 ): Promise<{ session_id: string; report_path: string; summary: Session }> {
-  const totalDuration = Math.round(performance.now() - state.start_time);
+  // Sum only actual Playwright action durations, not wall-clock time
+  // (wall-clock includes user think time, Claude inference, MCP round-trips)
+  const totalActionDuration = state.session.actions.reduce(
+    (sum, action) => sum + action.result.duration_ms, 0
+  );
 
   state.session.ended_at = new Date().toISOString();
   state.session.outcome = outcome;
   state.session.notes = notes;
   state.session.total_steps = state.current_step;
-  state.session.total_duration_ms = totalDuration;
+  state.session.total_duration_ms = totalActionDuration;
 
   // Save session JSON
   const sessionPath = path.join(state.session_dir, 'session.json');
