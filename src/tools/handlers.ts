@@ -6,6 +6,7 @@ import { captureAction } from '../capture/events.js';
 import { attachNetworkListeners, resetNetworkState } from '../capture/network.js';
 import { generateReport } from '../report/generator.js';
 import { generateFindings } from '../report/template.js';
+import open from 'open';
 
 const SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 
@@ -243,8 +244,9 @@ export async function handleEndSession(args: { outcome: string; notes: string })
     args.notes
   );
 
-  // Generate the HTML report
-  await generateReport(summary);
+  // Generate the HTML report and open it in the browser
+  const reportFile = await generateReport(summary);
+  open(reportFile).catch((_: unknown) => { /* best effort */ });
 
   // Cleanup
   clearSessionTimer();
