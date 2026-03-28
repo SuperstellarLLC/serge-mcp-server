@@ -48,7 +48,7 @@ function actionIcon(action: string): string {
   }
 }
 
-function generateFindings(session: Session): string[] {
+export function generateFindings(session: Session): string[] {
   const findings: string[] = [];
 
   // Failed actions

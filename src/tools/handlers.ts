@@ -5,7 +5,7 @@ import type { SessionState } from '../types.js';
 import { captureAction } from '../capture/events.js';
 import { attachNetworkListeners, resetNetworkState } from '../capture/network.js';
 import { generateReport } from '../report/generator.js';
-import open from 'open';
+import { generateFindings } from '../report/template.js';
 
 const SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 
@@ -237,15 +237,14 @@ export async function handleScreenshot() {
 export async function handleEndSession(args: { outcome: string; notes: string }) {
   const session = requireSession();
 
-  const { session_id, report_path, summary } = await endSession(
+  const { report_path, summary } = await endSession(
     session,
     args.outcome as 'success' | 'failure' | 'partial',
     args.notes
   );
 
-  // Generate the HTML report and open it in the browser
-  const reportFile = await generateReport(summary);
-  open(reportFile).catch((_: unknown) => { /* best effort */ });
+  // Generate the HTML report
+  await generateReport(summary);
 
   // Cleanup
   clearSessionTimer();
@@ -254,11 +253,32 @@ export async function handleEndSession(args: { outcome: string; notes: string })
   activeSession = null;
 
   const failures = summary.actions.filter(a => !a.result.success).length;
+  const findings = generateFindings(summary);
+
+  const findingsBlock = findings
+    .map(f => `  - ${f}`)
+    .join('\n');
 
   return {
     content: [{
       type: 'text' as const,
-      text: `Session ended.\n\nSession ID: ${session_id}\nOutcome: ${args.outcome}\nTotal steps: ${summary.total_steps}\nTotal time: ${(summary.total_duration_ms / 1000).toFixed(1)}s\nFailures: ${failures}\n\nReport saved to: ${report_path}\n\nThe user can view the report by running:\n  npx @serge-ai/mcp-server report`,
+      text: [
+        `Session ended.`,
+        ``,
+        `Outcome: ${args.outcome}`,
+        `Total steps: ${summary.total_steps}`,
+        `Total time: ${(summary.total_duration_ms / 1000).toFixed(1)}s`,
+        `Failures: ${failures}`,
+        ``,
+        `Findings:`,
+        findingsBlock,
+        ``,
+        `Full report saved to:`,
+        `  file://${report_path}`,
+        ``,
+        `Tell the user they can open the report with:`,
+        `  npx @serge-ai/mcp-server report`,
+      ].join('\n'),
     }],
   };
 }
